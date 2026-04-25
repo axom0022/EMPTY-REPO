@@ -1,386 +1,526 @@
-class color {
-  constructor(r,g,b) {
-    this.r = r===undefined?1:r;
-    this.g = g===undefined?1:g;
-    this.b = b===undefined?1:b;
-  }
-  setHex(hex) {
-    this.r = ((hex>>16)&255)/255;
-    this.g = ((hex>>8)&255)/255;
-    this.b = (hex&255)/255;
-    return this;
-  }
-  clone() { return new color(this.r,this.g,this.b); }
-}
+(function(global) {
+'use strict';
+var axomicjs = {};
 
-class vector2 {
-  constructor(x=0,y=0) { this.x=x; this.y=y; }
-  set(x,y) { this.x=x; this.y=y; return this; }
-  add(v) { this.x+=v.x; this.y+=v.y; return this; }
-  sub(v) { this.x-=v.x; this.y-=v.y; return this; }
-  multiplyScalar(s) { this.x*=s; this.y*=s; return this; }
-  clone() { return new vector2(this.x,this.y); }
-}
+axomicjs.Math = {};
+axomicjs.Math.DEG2RAD = Math.PI / 180;
+axomicjs.Math.RAD2DEG = 180 / Math.PI;
+axomicjs.Math.clamp = function(value, min, max) { return Math.max(min, Math.min(max, value)); };
+axomicjs.Math.lerp = function(x, y, t) { return (1 - t) * x + t * y; };
 
-class vector3 {
-  constructor(x=0,y=0,z=0) { this.x=x; this.y=y; this.z=z; }
-  set(x,y,z) { this.x=x; this.y=y; this.z=z; return this; }
-  add(v) { this.x+=v.x; this.y+=v.y; this.z+=v.z; return this; }
-  sub(v) { this.x-=v.x; this.y-=v.y; this.z-=v.z; return this; }
-  multiplyScalar(s) { this.x*=s; this.y*=s; this.z*=s; return this; }
-  cross(v) {
-    let x=this.y*v.z-this.z*v.y;
-    let y=this.z*v.x-this.x*v.z;
-    let z=this.x*v.y-this.y*v.x;
-    this.x=x; this.y=y; this.z=z; return this;
-  }
-  dot(v) { return this.x*v.x+this.y*v.y+this.z*v.z; }
-  length() { return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z); }
-  normalize() { let l=this.length(); if(l!==0) this.multiplyScalar(1/l); return this; }
-  clone() { return new vector3(this.x,this.y,this.z); }
-}
+axomicjs.Vector2 = function(x, y) { this.x = x || 0; this.y = y || 0; };
+axomicjs.Vector2.prototype.set = function(x, y) { this.x = x; this.y = y; return this; };
+axomicjs.Vector2.prototype.copy = function(v) { this.x = v.x; this.y = v.y; return this; };
+axomicjs.Vector2.prototype.clone = function() { return new axomicjs.Vector2(this.x, this.y); };
+axomicjs.Vector2.prototype.add = function(v) { this.x += v.x; this.y += v.y; return this; };
+axomicjs.Vector2.prototype.sub = function(v) { this.x -= v.x; this.y -= v.y; return this; };
+axomicjs.Vector2.prototype.multiplyScalar = function(s) { this.x *= s; this.y *= s; return this; };
+axomicjs.Vector2.prototype.length = function() { return Math.sqrt(this.x * this.x + this.y * this.y); };
+axomicjs.Vector2.prototype.normalize = function() { var l = this.length(); if (l > 0) { this.x /= l; this.y /= l; } return this; };
+axomicjs.Vector2.prototype.dot = function(v) { return this.x * v.x + this.y * v.y; };
+axomicjs.Vector2.prototype.distanceTo = function(v) { var dx = this.x - v.x, dy = this.y - v.y; return Math.sqrt(dx * dx + dy * dy); };
 
-class vector4 {
-  constructor(x=0,y=0,z=0,w=1) { this.x=x; this.y=y; this.z=z; this.w=w; }
-  clone() { return new vector4(this.x,this.y,this.z,this.w); }
-}
+axomicjs.Vector3 = function(x, y, z) { this.x = x || 0; this.y = y || 0; this.z = z || 0; };
+axomicjs.Vector3.prototype.set = function(x, y, z) { this.x = x; this.y = y; this.z = z; return this; };
+axomicjs.Vector3.prototype.copy = function(v) { this.x = v.x; this.y = v.y; this.z = v.z; return this; };
+axomicjs.Vector3.prototype.clone = function() { return new axomicjs.Vector3(this.x, this.y, this.z); };
+axomicjs.Vector3.prototype.add = function(v) { this.x += v.x; this.y += v.y; this.z += v.z; return this; };
+axomicjs.Vector3.prototype.sub = function(v) { this.x -= v.x; this.y -= v.y; this.z -= v.z; return this; };
+axomicjs.Vector3.prototype.multiplyScalar = function(s) { this.x *= s; this.y *= s; this.z *= s; return this; };
+axomicjs.Vector3.prototype.length = function() { return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z); };
+axomicjs.Vector3.prototype.normalize = function() { var l = this.length(); if (l > 0) { this.x /= l; this.y /= l; this.z /= l; } return this; };
+axomicjs.Vector3.prototype.dot = function(v) { return this.x * v.x + this.y * v.y + this.z * v.z; };
+axomicjs.Vector3.prototype.cross = function(v) { var ax = this.x, ay = this.y, az = this.z; this.x = ay * v.z - az * v.y; this.y = az * v.x - ax * v.z; this.z = ax * v.y - ay * v.x; return this; };
+axomicjs.Vector3.prototype.distanceTo = function(v) { var dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z; return Math.sqrt(dx * dx + dy * dy + dz * dz); };
+axomicjs.Vector3.prototype.applyMatrix4 = function(m) { var x = this.x, y = this.y, z = this.z; var e = m.elements; var w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]); this.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w; this.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w; this.z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w; return this; };
+axomicjs.Vector3.prototype.lerp = function(v, t) { this.x += (v.x - this.x) * t; this.y += (v.y - this.y) * t; this.z += (v.z - this.z) * t; return this; };
 
-class matrix3 {
-  constructor() { this.elements=[1,0,0,0,1,0,0,0,1]; }
-  clone() { let m=new matrix3(); m.elements=this.elements.slice(); return m; }
-}
+axomicjs.Vector4 = function(x, y, z, w) { this.x = x || 0; this.y = y || 0; this.z = z || 0; this.w = (w !== undefined) ? w : 1; };
+axomicjs.Vector4.prototype.set = function(x, y, z, w) { this.x = x; this.y = y; this.z = z; this.w = w; return this; };
+axomicjs.Vector4.prototype.copy = function(v) { this.x = v.x; this.y = v.y; this.z = v.z; this.w = v.w; return this; };
+axomicjs.Vector4.prototype.clone = function() { return new axomicjs.Vector4(this.x, this.y, this.z, this.w); };
 
-class matrix4 {
-  constructor() { this.elements=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]; }
-  makePerspective(left,right,top,bottom,near,far) {
-    let x=2*near/(right-left);
-    let y=2*near/(top-bottom);
-    let a=(right+left)/(right-left);
-    let b=(top+bottom)/(top-bottom);
-    let c=-(far+near)/(far-near);
-    let d=-2*far*near/(far-near);
-    this.elements[0]=x; this.elements[4]=0; this.elements[8]=a; this.elements[12]=0;
-    this.elements[1]=0; this.elements[5]=y; this.elements[9]=b; this.elements[13]=0;
-    this.elements[2]=0; this.elements[6]=0; this.elements[10]=c; this.elements[14]=d;
-    this.elements[3]=0; this.elements[7]=0; this.elements[11]=-1; this.elements[15]=0;
-    return this;
-  }
-  makeOrthographic(left,right,top,bottom,near,far) {
-    let w=right-left, h=top-bottom, d=far-near;
-    this.elements[0]=2/w; this.elements[4]=0; this.elements[8]=0; this.elements[12]=-(right+left)/w;
-    this.elements[1]=0; this.elements[5]=2/h; this.elements[9]=0; this.elements[13]=-(top+bottom)/h;
-    this.elements[2]=0; this.elements[6]=0; this.elements[10]=-2/d; this.elements[14]=-(far+near)/d;
-    this.elements[3]=0; this.elements[7]=0; this.elements[11]=0; this.elements[15]=1;
-    return this;
-  }
-  lookAt(eye,target,up) {
-    let z=new vector3().subVectors(eye,target).normalize();
-    let x=new vector3().crossVectors(up,z).normalize();
-    let y=new vector3().crossVectors(z,x);
-    this.elements[0]=x.x; this.elements[4]=x.y; this.elements[8]=x.z; this.elements[12]=-x.dot(eye);
-    this.elements[1]=y.x; this.elements[5]=y.y; this.elements[9]=y.z; this.elements[13]=-y.dot(eye);
-    this.elements[2]=z.x; this.elements[6]=z.y; this.elements[10]=z.z; this.elements[14]=-z.dot(eye);
-    this.elements[3]=0; this.elements[7]=0; this.elements[11]=0; this.elements[15]=1;
-    return this;
-  }
-  multiply(m) {
-    let a=this.elements, b=m.elements;
-    let a00=a[0],a01=a[4],a02=a[8],a03=a[12];
-    let a10=a[1],a11=a[5],a12=a[9],a13=a[13];
-    let a20=a[2],a21=a[6],a22=a[10],a23=a[14];
-    let a30=a[3],a31=a[7],a32=a[11],a33=a[15];
-    let b00=b[0],b01=b[4],b02=b[8],b03=b[12];
-    let b10=b[1],b11=b[5],b12=b[9],b13=b[13];
-    let b20=b[2],b21=b[6],b22=b[10],b23=b[14];
-    let b30=b[3],b31=b[7],b32=b[11],b33=b[15];
-    this.elements[0]=a00*b00+a01*b10+a02*b20+a03*b30;
-    this.elements[4]=a00*b01+a01*b11+a02*b21+a03*b31;
-    this.elements[8]=a00*b02+a01*b12+a02*b22+a03*b32;
-    this.elements[12]=a00*b03+a01*b13+a02*b23+a03*b33;
-    this.elements[1]=a10*b00+a11*b10+a12*b20+a13*b30;
-    this.elements[5]=a10*b01+a11*b11+a12*b21+a13*b31;
-    this.elements[9]=a10*b02+a11*b12+a12*b22+a13*b32;
-    this.elements[13]=a10*b03+a11*b13+a12*b23+a13*b33;
-    this.elements[2]=a20*b00+a21*b10+a22*b20+a23*b30;
-    this.elements[6]=a20*b01+a21*b11+a22*b21+a23*b31;
-    this.elements[10]=a20*b02+a21*b12+a22*b22+a23*b32;
-    this.elements[14]=a20*b03+a21*b13+a22*b23+a23*b33;
-    this.elements[3]=a30*b00+a31*b10+a32*b20+a33*b30;
-    this.elements[7]=a30*b01+a31*b11+a32*b21+a33*b31;
-    this.elements[11]=a30*b02+a31*b12+a32*b22+a33*b32;
-    this.elements[15]=a30*b03+a31*b13+a32*b23+a33*b33;
-    return this;
-  }
-  compose(position,quaternion,scale) {
-    let x=quaternion.x, y=quaternion.y, z=quaternion.z, w=quaternion.w;
-    let x2=x+x, y2=y+y, z2=z+z;
-    let xx=x*x2, xy=x*y2, xz=x*z2;
-    let yy=y*y2, yz=y*z2, zz=z*z2;
-    let wx=w*x2, wy=w*y2, wz=w*z2;
-    let sx=scale.x, sy=scale.y, sz=scale.z;
-    this.elements[0]=(1-(yy+zz))*sx;
-    this.elements[4]=(xy-wz)*sy;
-    this.elements[8]=(xz+wy)*sz;
-    this.elements[12]=position.x;
-    this.elements[1]=(xy+wz)*sx;
-    this.elements[5]=(1-(xx+zz))*sy;
-    this.elements[9]=(yz-wx)*sz;
-    this.elements[13]=position.y;
-    this.elements[2]=(xz-wy)*sx;
-    this.elements[6]=(yz+wx)*sy;
-    this.elements[10]=(1-(xx+yy))*sz;
-    this.elements[14]=position.z;
-    this.elements[3]=0; this.elements[7]=0; this.elements[11]=0; this.elements[15]=1;
-    return this;
-  }
-  clone() { let m=new matrix4(); m.elements=this.elements.slice(); return m; }
-}
+axomicjs.Matrix3 = function() { this.elements = [1,0,0, 0,1,0, 0,0,1]; };
+axomicjs.Matrix3.prototype.set = function(n11,n12,n13,n21,n22,n23,n31,n32,n33) { var e = this.elements; e[0]=n11;e[1]=n21;e[2]=n31;e[3]=n12;e[4]=n22;e[5]=n32;e[6]=n13;e[7]=n23;e[8]=n33; return this; };
+axomicjs.Matrix3.prototype.identity = function() { this.set(1,0,0,0,1,0,0,0,1); return this; };
 
-class quaternion {
-  constructor(x=0,y=0,z=0,w=1) { this.x=x; this.y=y; this.z=z; this.w=w; }
-  setFromEuler(euler) {
-    let cx=Math.cos(euler.x/2), cy=Math.cos(euler.y/2), cz=Math.cos(euler.z/2);
-    let sx=Math.sin(euler.x/2), sy=Math.sin(euler.y/2), sz=Math.sin(euler.z/2);
-    this.x=sx*cy*cz+cx*sy*sz;
-    this.y=cx*sy*cz-sx*cy*sz;
-    this.z=cx*cy*sz+sx*sy*cz;
-    this.w=cx*cy*cz-sx*sy*sz;
-    return this;
-  }
-  clone() { return new quaternion(this.x,this.y,this.z,this.w); }
-}
-
-class euler {
-  constructor(x=0,y=0,z=0,order='xyz') { this.x=x; this.y=y; this.z=z; this.order=order; }
-  clone() { return new euler(this.x,this.y,this.z,this.order); }
-}
-
-class object3d {
-  constructor() {
-    this.position=new vector3();
-    this.quaternion=new quaternion();
-    this.scale=new vector3(1,1,1);
-    this.matrix=new matrix4();
-    this.matrixWorld=new matrix4();
-    this.parent=null;
-    this.children=[];
-    this.userData={};
-    this.visible=true;
-  }
-  add(child) { if(child.parent) child.parent.remove(child); child.parent=this; this.children.push(child); return this; }
-  remove(child) { let idx=this.children.indexOf(child); if(idx!==-1) { this.children.splice(idx,1); child.parent=null; } return this; }
-  updateMatrix() { this.matrix.compose(this.position,this.quaternion,this.scale); }
-  updateMatrixWorld(force) {
-    if(this.parent) this.matrixWorld.multiplyMatrices(this.parent.matrixWorld,this.matrix);
-    else this.matrixWorld.copy(this.matrix);
-    for(let c of this.children) c.updateMatrixWorld(force);
-  }
-  traverse(callback) { callback(this); for(let c of this.children) c.traverse(callback); }
-  clone(recursive=true) {
-    let obj=new object3d();
-    obj.position.copy(this.position);
-    obj.quaternion.copy(this.quaternion);
-    obj.scale.copy(this.scale);
-    obj.visible=this.visible;
-    if(recursive) for(let c of this.children) obj.add(c.clone(true));
-    return obj;
-  }
-}
-
-class scene extends object3d {
-  constructor() { super(); this.background=new color(0,0,0); }
-}
-
-class camera extends object3d {
-  constructor() { super(); this.matrixWorldInverse=new matrix4(); this.projectionMatrix=new matrix4(); }
-  updateMatrixWorld(force) { super.updateMatrixWorld(force); this.matrixWorldInverse.copy(this.matrixWorld).invert(); }
-}
-
-class perspectivecamera extends camera {
-  constructor(fov=75,aspect=1,near=0.1,far=1000) {
-    super();
-    this.fov=fov; this.aspect=aspect; this.near=near; this.far=far;
-    this.updateProjectionMatrix();
-  }
-  updateProjectionMatrix() {
-    let top=Math.tan(this.fov*Math.PI/360)*this.near;
-    let bottom=-top;
-    let right=top*this.aspect;
-    let left=-right;
-    this.projectionMatrix.makePerspective(left,right,top,bottom,this.near,this.far);
-  }
-}
-
-class orthographiccamera extends camera {
-  constructor(left=-1,right=1,top=1,bottom=-1,near=0.1,far=1000) {
-    super();
-    this.left=left; this.right=right; this.top=top; this.bottom=bottom; this.near=near; this.far=far;
-    this.updateProjectionMatrix();
-  }
-  updateProjectionMatrix() { this.projectionMatrix.makeOrthographic(this.left,this.right,this.top,this.bottom,this.near,this.far); }
-}
-
-class bufferattribute {
-  constructor(array,itemSize) { this.array=array; this.itemSize=itemSize; this.count=array.length/itemSize; }
-}
-
-class buffergeometry {
-  constructor() { this.attributes={}; this.index=null; }
-  setAttribute(name,attr) { this.attributes[name]=attr; }
-  setIndex(indices) { this.index=new bufferattribute(indices,1); }
-}
-
-class material {
-  constructor() { this.side=0; this.transparent=false; this.opacity=1; this.color=new color(1,1,1); }
-}
-
-class meshbasicmaterial extends material {
-  constructor(params={}) { super(); if(params.color) this.color.setHex(params.color); }
-}
-
-class meshstandardmaterial extends material {
-  constructor(params={}) { super(); if(params.color) this.color.setHex(params.color); this.roughness=params.roughness||0.5; this.metalness=params.metalness||0.5; }
-}
-
-class mesh extends object3d {
-  constructor(geometry,material) { super(); this.geometry=geometry; this.material=material; }
-}
-
-class points extends object3d {
-  constructor(geometry,material) { super(); this.geometry=geometry; this.material=material; }
-}
-
-class line extends object3d {
-  constructor(geometry,material) { super(); this.geometry=geometry; this.material=material; }
-}
-
-class light extends object3d {
-  constructor(color=0xffffff,intensity=1) { super(); this.color=new color().setHex(color); this.intensity=intensity; }
-}
-
-class ambientlight extends light {
-  constructor(color,intensity) { super(color,intensity); }
-}
-
-class directionallight extends light {
-  constructor(color,intensity) { super(color,intensity); }
-}
-
-class pointlight extends light {
-  constructor(color,intensity,distance=0,decay=1) { super(color,intensity); this.distance=distance; this.decay=decay; }
-}
-
-class spotlight extends light {
-  constructor(color,intensity,distance=0,angle=Math.PI/3,penumbra=0,decay=1) { super(color,intensity); this.distance=distance; this.angle=angle; this.penumbra=penumbra; this.decay=decay; }
-}
-
-class texture {
-  constructor(image) { this.image=image; this.needsUpdate=true; }
-}
-
-class textureloader {
-  load(url,onLoad) {
-    let img=new Image(); img.crossOrigin='Anonymous';
-    img.onload=()=>{ let tex=new texture(img); if(onLoad) onLoad(tex); };
-    img.src=url; return null;
-  }
-}
-
-class webglrenderer {
-  constructor(params={}) {
-    this.domElement=params.canvas||document.createElement('canvas');
-    this.width=params.width||window.innerWidth;
-    this.height=params.height||window.innerHeight;
-    this.domElement.width=this.width; this.domElement.height=this.height;
-    this.gl=this.domElement.getContext('webgl')||this.domElement.getContext('experimental-webgl');
-    if(!this.gl) console.error('webgl not supported');
-    this.gl.viewport(0,0,this.width,this.height);
-    this.programCache=new Map();
-  }
-  setSize(width,height) { this.width=width; this.height=height; this.domElement.width=width; this.domElement.height=height; this.gl.viewport(0,0,width,height); }
-  compileShader(type,source) { let shader=this.gl.createShader(type); this.gl.shaderSource(shader,source); this.gl.compileShader(shader); if(!this.gl.getShaderParameter(shader,this.gl.COMPILE_STATUS)) console.error(this.gl.getShaderInfoLog(shader)); return shader; }
-  createProgram(vs,fs) { let program=this.gl.createProgram(); this.gl.attachShader(program,vs); this.gl.attachShader(program,fs); this.gl.linkProgram(program); if(!this.gl.getProgramParameter(program,this.gl.LINK_STATUS)) console.error(this.gl.getProgramInfoLog(program)); return program; }
-  getDefaultShader() {
-    let cacheKey='default';
-    if(this.programCache.has(cacheKey)) return this.programCache.get(cacheKey);
-    let vs=`attribute vec3 position; uniform mat4 modelViewMatrix; uniform mat4 projectionMatrix; void main(){ gl_PointSize=1.0; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`;
-    let fs=`uniform vec3 color; void main(){ gl_FragColor=vec4(color,1.0); }`;
-    let vsh=this.compileShader(this.gl.VERTEX_SHADER,vs);
-    let fsh=this.compileShader(this.gl.FRAGMENT_SHADER,fs);
-    let prog=this.createProgram(vsh,fsh);
-    this.programCache.set(cacheKey,prog);
-    return prog;
-  }
-  render(scene,camera) {
-    let gl=this.gl;
-    gl.clearColor(scene.background.r,scene.background.g,scene.background.b,1);
-    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
-    scene.updateMatrixWorld();
-    camera.updateMatrixWorld();
-    let viewMatrix=camera.matrixWorldInverse;
-    let projMatrix=camera.projectionMatrix;
-    scene.traverse(obj=>{
-      if(!obj.visible) return;
-      if(obj.isMesh||obj.isPoints||obj.isLine) {
-        let modelMatrix=obj.matrixWorld;
-        let mvp=new matrix4().multiplyMatrices(projMatrix,new matrix4().multiplyMatrices(viewMatrix,modelMatrix));
-        let program=this.getDefaultShader();
-        gl.useProgram(program);
-        let posLoc=gl.getAttribLocation(program,'position');
-        let mvpLoc=gl.getUniformLocation(program,'projectionMatrix');
-        let mvLoc=gl.getUniformLocation(program,'modelViewMatrix');
-        let colorLoc=gl.getUniformLocation(program,'color');
-        gl.uniformMatrix4fv(mvpLoc,false,mvp.elements);
-        gl.uniformMatrix4fv(mvLoc,false,new matrix4().multiplyMatrices(viewMatrix,modelMatrix).elements);
-        let col=obj.material?obj.material.color:{r:1,g:1,b:1};
-        gl.uniform3f(colorLoc,col.r,col.g,col.b);
-        let geom=obj.geometry;
-        let posAttr=geom.attributes.position;
-        if(posAttr) {
-          let buffer=gl.createBuffer();
-          gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
-          gl.bufferData(gl.ARRAY_BUFFER,posAttr.array,gl.STATIC_DRAW);
-          gl.enableVertexAttribArray(posLoc);
-          gl.vertexAttribPointer(posLoc,posAttr.itemSize,gl.FLOAT,false,0,0);
-          let indexCount=geom.index?geom.index.count:posAttr.count;
-          if(geom.index) {
-            let idxBuf=gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,idxBuf);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,geom.index.array,gl.STATIC_DRAW);
-            gl.drawElements(gl.TRIANGLES,indexCount,gl.UNSIGNED_SHORT,0);
-          } else gl.drawArrays(gl.TRIANGLES,0,posAttr.count);
-        }
-      }
-    });
-  }
-}
-
-class orbitcontrols {
-  constructor(camera,domElement) {
-    this.camera=camera; this.domElement=domElement;
-    this.enabled=true; this.target=new vector3();
-    this.rotateSpeed=1.0; this.zoomSpeed=1.2;
-    this._onMouseMove=this._onMouseMove.bind(this);
-    this._onMouseDown=this._onMouseDown.bind(this);
-    this._onMouseUp=this._onMouseUp.bind(this);
-    this._onWheel=this._onWheel.bind(this);
-    this.domElement.addEventListener('mousedown',this._onMouseDown);
-    this.domElement.addEventListener('wheel',this._onWheel);
-  }
-  _onMouseDown(e) { if(!this.enabled) return; this._startX=e.clientX; this._startY=e.clientY; document.addEventListener('mousemove',this._onMouseMove); document.addEventListener('mouseup',this._onMouseUp); e.preventDefault(); }
-  _onMouseMove(e) { if(!this.enabled) return; let dx=(e.clientX-this._startX)*0.005*this.rotateSpeed; let dy=(e.clientY-this._startY)*0.005*this.rotateSpeed; let pos=this.camera.position; let deltaPhi=dx; let deltaTheta=dy; let radius=Math.sqrt(pos.x*pos.x+pos.y*pos.y+pos.z*pos.z); let theta=Math.atan2(pos.z,pos.x); let phi=Math.acos(pos.y/radius); theta+=deltaPhi; phi+=deltaTheta; if(phi>Math.PI-0.01) phi=Math.PI-0.01; if(phi<0.01) phi=0.01; pos.x=radius*Math.sin(phi)*Math.cos(theta); pos.y=radius*Math.cos(phi); pos.z=radius*Math.sin(phi)*Math.sin(theta); this.camera.lookAt(this.target); this._startX=e.clientX; this._startY=e.clientY; }
-  _onMouseUp() { document.removeEventListener('mousemove',this._onMouseMove); document.removeEventListener('mouseup',this._onMouseUp); }
-  _onWheel(e) { if(!this.enabled) return; let delta=e.deltaY>0?1:-1; let pos=this.camera.position; let radius=Math.sqrt(pos.x*pos.x+pos.y*pos.y+pos.z*pos.z); radius+=delta*0.1*this.zoomSpeed; if(radius<0.1) radius=0.1; let theta=Math.atan2(pos.z,pos.x); let phi=Math.acos(pos.y/radius); pos.x=radius*Math.sin(phi)*Math.cos(theta); pos.y=radius*Math.cos(phi); pos.z=radius*Math.sin(phi)*Math.sin(theta); this.camera.lookAt(this.target); e.preventDefault(); }
-}
-
-let three={
-  color,vector2,vector3,vector4,matrix3,matrix4,quaternion,euler,
-  object3d,scene,camera,perspectivecamera,orthographiccamera,
-  bufferattribute,buffergeometry,material,meshbasicmaterial,meshstandardmaterial,
-  mesh,points,line,light,ambientlight,directionallight,pointlight,spotlight,
-  texture,textureloader,webglrenderer,orbitcontrols
+axomicjs.Matrix4 = function() { this.elements = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]; };
+axomicjs.Matrix4.prototype.set = function(n11,n12,n13,n14,n21,n22,n23,n24,n31,n32,n33,n34,n41,n42,n43,n44) {
+var e=this.elements; e[0]=n11;e[4]=n12;e[8]=n13;e[12]=n14; e[1]=n21;e[5]=n22;e[9]=n23;e[13]=n24; e[2]=n31;e[6]=n32;e[10]=n33;e[14]=n34; e[3]=n41;e[7]=n42;e[11]=n43;e[15]=n44; return this;
+};
+axomicjs.Matrix4.prototype.identity = function() { this.set(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1); return this; };
+axomicjs.Matrix4.prototype.multiply = function(m) { var a=this.elements, b=m.elements, r=[]; for(var i=0;i<4;i++) for(var j=0;j<4;j++) { var s=0; for(var k=0;k<4;k++) s+=a[i+4*k]*b[k+4*j]; r[i+4*j]=s; } for(var i=0;i<16;i++) a[i]=r[i]; return this; };
+axomicjs.Matrix4.prototype.compose = function(position, quaternion, scale) {
+var x=quaternion.x, y=quaternion.y, z=quaternion.z, w=quaternion.w;
+var x2=x+x, y2=y+y, z2=z+z;
+var xx=x*x2, xy=x*y2, xz=x*z2, yy=y*y2, yz=y*z2, zz=z*z2;
+var wx=w*x2, wy=w*y2, wz=w*z2;
+var sx=scale.x, sy=scale.y, sz=scale.z;
+var e=this.elements;
+e[0]=(1-(yy+zz))*sx; e[4]=(xy-wz)*sy; e[8]=(xz+wy)*sz; e[12]=position.x;
+e[1]=(xy+wz)*sx; e[5]=(1-(xx+zz))*sy; e[9]=(yz-wx)*sz; e[13]=position.y;
+e[2]=(xz-wy)*sx; e[6]=(yz+wx)*sy; e[10]=(1-(xx+yy))*sz; e[14]=position.z;
+e[3]=0; e[7]=0; e[11]=0; e[15]=1;
+return this;
+};
+axomicjs.Matrix4.prototype.lookAt = function(eye, target, up) {
+var z = new axomicjs.Vector3().copy(eye).sub(target).normalize();
+var x = new axomicjs.Vector3().copy(up).cross(z).normalize();
+var y = new axomicjs.Vector3().copy(z).cross(x).normalize();
+var e=this.elements;
+e[0]=x.x; e[4]=y.x; e[8]=z.x; e[12]=eye.x;
+e[1]=x.y; e[5]=y.y; e[9]=z.y; e[13]=eye.y;
+e[2]=x.z; e[6]=y.z; e[10]=z.z; e[14]=eye.z;
+e[3]=0; e[7]=0; e[11]=0; e[15]=1;
+return this;
+};
+axomicjs.Matrix4.prototype.perspective = function(fov, aspect, near, far) {
+var f = 1.0 / Math.tan(fov * Math.PI / 360);
+var nf = 1 / (near - far);
+var e=this.elements;
+e[0]=f/aspect; e[4]=0; e[8]=0; e[12]=0;
+e[1]=0; e[5]=f; e[9]=0; e[13]=0;
+e[2]=0; e[6]=0; e[10]=(far+near)*nf; e[14]=2*far*near*nf;
+e[3]=0; e[7]=0; e[11]=-1; e[15]=0;
+return this;
+};
+axomicjs.Matrix4.prototype.transformPoint = function(v) {
+var e=this.elements;
+var x=v.x, y=v.y, z=v.z;
+var w = e[3]*x + e[7]*y + e[11]*z + e[15];
+var iw = w!==0?1/w:1;
+return new axomicjs.Vector3((e[0]*x+e[4]*y+e[8]*z+e[12])*iw, (e[1]*x+e[5]*y+e[9]*z+e[13])*iw, (e[2]*x+e[6]*y+e[10]*z+e[14])*iw);
 };
 
-if(typeof window!=='undefined') window.three=three;
-export default three;
+axomicjs.Quaternion = function(x, y, z, w) { this.x = x || 0; this.y = y || 0; this.z = z || 0; this.w = (w !== undefined) ? w : 1; };
+axomicjs.Quaternion.prototype.set = function(x,y,z,w) { this.x=x; this.y=y; this.z=z; this.w=w; return this; };
+axomicjs.Quaternion.prototype.copy = function(q) { this.x=q.x; this.y=q.y; this.z=q.z; this.w=q.w; return this; };
+axomicjs.Quaternion.prototype.setFromEuler = function(euler) {
+var c1=Math.cos(euler.x/2), s1=Math.sin(euler.x/2);
+var c2=Math.cos(euler.y/2), s2=Math.sin(euler.y/2);
+var c3=Math.cos(euler.z/2), s3=Math.sin(euler.z/2);
+this.x = s1*c2*c3 + c1*s2*s3;
+this.y = c1*s2*c3 - s1*c2*s3;
+this.z = c1*c2*s3 + s1*s2*c3;
+this.w = c1*c2*c3 - s1*s2*s3;
+return this;
+};
+axomicjs.Quaternion.prototype.slerp = function(q, t) {
+if(t===0) return this;
+if(t===1) return this.copy(q);
+var cosHalfTheta = this.w*q.w + this.x*q.x + this.y*q.y + this.z*q.z;
+if(cosHalfTheta<0) { q = new axomicjs.Quaternion(-q.x,-q.y,-q.z,-q.w); cosHalfTheta = -cosHalfTheta; }
+if(cosHalfTheta>=1.0) return this;
+var sinHalfTheta = Math.sqrt(1-cosHalfTheta*cosHalfTheta);
+if(Math.abs(sinHalfTheta)<0.001) { this.w=this.w*0.5+q.w*0.5; this.x=this.x*0.5+q.x*0.5; this.y=this.y*0.5+q.y*0.5; this.z=this.z*0.5+q.z*0.5; return this; }
+var halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
+var ratioA = Math.sin((1-t)*halfTheta)/sinHalfTheta;
+var ratioB = Math.sin(t*halfTheta)/sinHalfTheta;
+this.w = this.w*ratioA + q.w*ratioB;
+this.x = this.x*ratioA + q.x*ratioB;
+this.y = this.y*ratioA + q.y*ratioB;
+this.z = this.z*ratioA + q.z*ratioB;
+return this;
+};
+
+axomicjs.Euler = function(x,y,z) { this.x=x||0; this.y=y||0; this.z=z||0; };
+axomicjs.Euler.prototype.set = function(x,y,z) { this.x=x; this.y=y; this.z=z; return this; };
+axomicjs.Euler.prototype.copy = function(e) { this.x=e.x; this.y=e.y; this.z=e.z; return this; };
+
+axomicjs.Color = function(r,g,b) {
+if (arguments.length === 1) { this.setHex(r); } else { this.r = r || 0; this.g = g || 0; this.b = b || 0; }
+};
+axomicjs.Color.prototype.setRGB = function(r,g,b) { this.r=r; this.g=g; this.b=b; return this; };
+axomicjs.Color.prototype.setHex = function(hex) { this.r=((hex>>16)&255)/255; this.g=((hex>>8)&255)/255; this.b=(hex&255)/255; return this; };
+axomicjs.Color.prototype.clone = function() { return new axomicjs.Color(this.r, this.g, this.b); };
+axomicjs.Color.prototype.multiplyScalar = function(s) { this.r=Math.min(1,this.r*s); this.g=Math.min(1,this.g*s); this.b=Math.min(1,this.b*s); return this; };
+axomicjs.Color.prototype.toHex = function() { return (Math.floor(this.r*255)<<16)|(Math.floor(this.g*255)<<8)|Math.floor(this.b*255); };
+axomicjs.Color.prototype.lerp = function(c, t) { this.r=axomicjs.Math.lerp(this.r,c.r,t); this.g=axomicjs.Math.lerp(this.g,c.g,t); this.b=axomicjs.Math.lerp(this.b,c.b,t); return this; };
+
+axomicjs.EventDispatcher = function() { this._listeners = {}; };
+axomicjs.EventDispatcher.prototype.addEventListener = function(type, listener) { if(!this._listeners[type]) this._listeners[type]=[]; this._listeners[type].push(listener); };
+axomicjs.EventDispatcher.prototype.removeEventListener = function(type, listener) { if(!this._listeners[type]) return; var i=this._listeners[type].indexOf(listener); if(i>=0) this._listeners[type].splice(i,1); };
+axomicjs.EventDispatcher.prototype.dispatchEvent = function(event) { if(!this._listeners[event.type]) return; for(var i=0;i<this._listeners[event.type].length;i++) this._listeners[event.type][i](event); };
+
+axomicjs.Raycaster = function(origin, direction) { this.origin = origin || new axomicjs.Vector3(); this.direction = direction || new axomicjs.Vector3(); };
+axomicjs.Raycaster.prototype.set = function(origin, direction) { this.origin.copy(origin); this.direction.copy(direction).normalize(); return this; };
+axomicjs.Raycaster.prototype.intersectObject = function(object) {
+var results = [];
+if(!object.visible) return results;
+object.updateMatrix();
+var localOrigin = new axomicjs.Vector3().copy(this.origin).applyMatrix4(new axomicjs.Matrix4().identity().multiply(object.matrix).invert ? null : null);
+return results;
+};
+axomicjs.Raycaster.prototype.intersectObjects = function(objects) { var results=[]; for(var i=0;i<objects.length;i++) results=results.concat(this.intersectObject(objects[i])); results.sort(function(a,b){return a.distance-b.distance;}); return results; };
+
+axomicjs.Object3D = function() {
+axomicjs.EventDispatcher.call(this);
+this.position = new axomicjs.Vector3();
+this.rotation = new axomicjs.Euler();
+this.quaternion = new axomicjs.Quaternion();
+this.scale = new axomicjs.Vector3(1,1,1);
+this.matrix = new axomicjs.Matrix4();
+this.children = [];
+this.parent = null;
+this.visible = true;
+this.castShadow = false;
+this.receiveShadow = false;
+this.frustumCulled = true;
+};
+axomicjs.Object3D.prototype = Object.create(axomicjs.EventDispatcher.prototype);
+axomicjs.Object3D.prototype.constructor = axomicjs.Object3D;
+axomicjs.Object3D.prototype.add = function(child) { if(child.parent) child.parent.remove(child); child.parent=this; this.children.push(child); return this; };
+axomicjs.Object3D.prototype.remove = function(child) { var i=this.children.indexOf(child); if(i>=0) { this.children.splice(i,1); child.parent=null; } return this; };
+axomicjs.Object3D.prototype.clear = function() { for(var i=0;i<this.children.length;i++) this.children[i].parent=null; this.children.length=0; };
+axomicjs.Object3D.prototype.updateMatrix = function() { this.quaternion.setFromEuler(this.rotation); this.matrix.compose(this.position, this.quaternion, this.scale); };
+axomicjs.Object3D.prototype.getWorldPosition = function() { this.updateMatrix(); var wp=new axomicjs.Vector3(); var e=this.matrix.elements; wp.set(e[12],e[13],e[14]); if(this.parent){var pw=this.parent.getWorldPosition(); wp.add(pw);} return wp; };
+axomicjs.Object3D.prototype.lookAt = function(x,y,z) { var target=new axomicjs.Vector3(x,y,z); var up=new axomicjs.Vector3(0,1,0); var m4=new axomicjs.Matrix4().lookAt(this.position,target,up); this.quaternion.setFromEuler(this.rotation); return this; };
+
+axomicjs.Scene = function() { axomicjs.Object3D.call(this); this.fog=null; this.overrideMaterial=null; };
+axomicjs.Scene.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.Scene.prototype.constructor = axomicjs.Scene;
+
+axomicjs.Fog = function(color, near, far) { this.color=new axomicjs.Color(color); this.near=near||1; this.far=far||1000; };
+
+axomicjs.PerspectiveCamera = function(fov, aspect, near, far) {
+axomicjs.Object3D.call(this);
+this.fov = fov || 60;
+this.aspect = aspect || 1;
+this.near = near || 0.1;
+this.far = far || 1000;
+this.projectionMatrix = new axomicjs.Matrix4();
+this.viewMatrix = new axomicjs.Matrix4();
+this.updateProjectionMatrix();
+};
+axomicjs.PerspectiveCamera.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.PerspectiveCamera.prototype.constructor = axomicjs.PerspectiveCamera;
+axomicjs.PerspectiveCamera.prototype.updateProjectionMatrix = function() { this.projectionMatrix.perspective(this.fov, this.aspect, this.near, this.far); };
+axomicjs.PerspectiveCamera.prototype.lookAt = function(x,y,z) { var t=new axomicjs.Vector3(x,y,z); this.viewMatrix.lookAt(this.position, t, new axomicjs.Vector3(0,1,0)); };
+axomicjs.PerspectiveCamera.prototype.setViewOffset = function(fullWidth, fullHeight, x, y, width, height) {};
+
+axomicjs.Geometry = function() { this.vertices=[]; this.normals=[]; this.uvs=[]; this.faces=[]; this.faceNormals=[]; };
+axomicjs.Geometry.prototype.computeFaceNormals = function() {
+this.faceNormals=[];
+for(var i=0;i<this.faces.length;i++) {
+var f=this.faces[i];
+var v0=this.vertices[f[0]], v1=this.vertices[f[1]], v2=this.vertices[f[2]];
+var a=new axomicjs.Vector3().copy(v1).sub(v0), b=new axomicjs.Vector3().copy(v2).sub(v0);
+this.faceNormals.push(new axomicjs.Vector3().copy(a).cross(b).normalize());
+}
+};
+axomicjs.Geometry.prototype.computeVertexNormals = function() {
+this.normals=new Array(this.vertices.length);
+for(var i=0;i<this.vertices.length;i++) this.normals[i]=new axomicjs.Vector3();
+for(var i=0;i<this.faces.length;i++) {
+var f=this.faces[i];
+var fn=this.faceNormals[i]||new axomicjs.Vector3();
+for(var j=0;j<3;j++) this.normals[f[j]].add(fn);
+}
+for(var i=0;i<this.normals.length;i++) this.normals[i].normalize();
+};
+axomicjs.BoxGeometry = function(w,h,d) { axomicjs.Geometry.call(this); w/=2; h/=2; d/=2; var v=[[-w,-h,d],[w,-h,d],[w,h,d],[-w,h,d],[-w,-h,-d],[w,-h,-d],[w,h,-d],[-w,h,-d]]; this.vertices=v.map(function(a){return new axomicjs.Vector3(a[0],a[1],a[2]);}); this.uvs=[new axomicjs.Vector2(0,0),new axomicjs.Vector2(1,0),new axomicjs.Vector2(1,1),new axomicjs.Vector2(0,1),new axomicjs.Vector2(0,0),new axomicjs.Vector2(1,0),new axomicjs.Vector2(1,1),new axomicjs.Vector2(0,1)]; this.faces=[[0,1,2],[0,2,3],[1,5,6],[1,6,2],[5,4,7],[5,7,6],[4,0,3],[4,3,7],[3,2,6],[3,6,7],[4,5,1],[4,1,0]]; this.computeFaceNormals(); };
+axomicjs.BoxGeometry.prototype = Object.create(axomicjs.Geometry.prototype);
+axomicjs.SphereGeometry = function(r,segW,segH){ axomicjs.Geometry.call(this); segW=segW||16; segH=segH||12; var vs=[], uvs=[]; for(var i=0;i<=segH;i++){ var phi=i/segH*Math.PI, y=Math.cos(phi)*r, rad=Math.sin(phi)*r; for(var j=0;j<=segW;j++){ var th=j/segW*Math.PI*2; vs.push(new axomicjs.Vector3(rad*Math.cos(th),y,rad*Math.sin(th))); uvs.push(new axomicjs.Vector2(j/segW,i/segH)); } } this.vertices=vs; this.uvs=uvs; this.faces=[]; for(var i=0;i<segH;i++) for(var j=0;j<segW;j++){ var a=i*(segW+1)+j, b=a+segW+1, c=a+1, d=b+1; this.faces.push([a,b,c]); this.faces.push([c,b,d]); } this.computeFaceNormals(); };
+axomicjs.SphereGeometry.prototype = Object.create(axomicjs.Geometry.prototype);
+axomicjs.CylinderGeometry = function(rT,rB,h,seg){ axomicjs.Geometry.call(this); seg=seg||16; var hh=h/2, vs=[]; vs.push(new axomicjs.Vector3(0,hh,0)); vs.push(new axomicjs.Vector3(0,-hh,0)); var topS=2, botS=topS+seg; for(var i=0;i<seg;i++){ var a=i/seg*Math.PI*2, x=Math.cos(a), z=Math.sin(a); vs.push(new axomicjs.Vector3(x*rT,hh,z*rT)); vs.push(new axomicjs.Vector3(x*rB,-hh,z*rB)); } this.vertices=vs; this.faces=[]; for(var i=0;i<seg;i++){ var n=(i+1)%seg, ti=topS+i, tn=topS+n, bi=botS+i, bn=botS+n; this.faces.push([0,ti,tn]); this.faces.push([1,bn,bi]); this.faces.push([ti,bi,bn]); this.faces.push([ti,bn,tn]); } this.computeFaceNormals(); };
+axomicjs.CylinderGeometry.prototype = Object.create(axomicjs.Geometry.prototype);
+axomicjs.PlaneGeometry = function(w,d){ axomicjs.Geometry.call(this); w/=2; d/=2; this.vertices=[new axomicjs.Vector3(-w,0,-d),new axomicjs.Vector3(w,0,-d),new axomicjs.Vector3(w,0,d),new axomicjs.Vector3(-w,0,d)]; this.uvs=[new axomicjs.Vector2(0,0),new axomicjs.Vector2(1,0),new axomicjs.Vector2(1,1),new axomicjs.Vector2(0,1)]; this.faces=[[0,1,2],[0,2,3]]; this.computeFaceNormals(); };
+axomicjs.PlaneGeometry.prototype = Object.create(axomicjs.Geometry.prototype);
+axomicjs.TorusGeometry = function(R,r,seg,rings){ axomicjs.Geometry.call(this); seg=seg||20; rings=rings||12; var vs=[]; for(var i=0;i<=rings;i++){ var phi=i/rings*Math.PI*2, cp=Math.cos(phi), sp=Math.sin(phi); for(var j=0;j<=seg;j++){ var th=j/seg*Math.PI*2, ct=Math.cos(th), st=Math.sin(th); vs.push(new axomicjs.Vector3((R+r*ct)*cp, r*st, (R+r*ct)*sp)); } } this.vertices=vs; this.faces=[]; var sp1=seg+1; for(var i=0;i<rings;i++) for(var j=0;j<seg;j++){ var a=i*sp1+j, b=a+sp1, c=a+1, d=b+1; this.faces.push([a,b,c]); this.faces.push([c,b,d]); } this.computeFaceNormals(); };
+axomicjs.TorusGeometry.prototype = Object.create(axomicjs.Geometry.prototype);
+axomicjs.OctahedronGeometry = function(r){ axomicjs.Geometry.call(this); this.vertices=[new axomicjs.Vector3(0,r,0),new axomicjs.Vector3(0,-r,0),new axomicjs.Vector3(r,0,0),new axomicjs.Vector3(-r,0,0),new axomicjs.Vector3(0,0,r),new axomicjs.Vector3(0,0,-r)]; this.faces=[[0,2,4],[0,4,3],[0,3,5],[0,5,2],[1,4,2],[1,3,4],[1,5,3],[1,2,5]]; this.computeFaceNormals(); };
+axomicjs.OctahedronGeometry.prototype = Object.create(axomicjs.Geometry.prototype);
+
+axomicjs.Texture = function(src) {
+this.image = null;
+this.src = src;
+this.loaded = false;
+var that = this;
+if(src) {
+this.image = new Image();
+this.image.onload = function() { that.loaded=true; that.dispatchEvent({type:'load'}); };
+this.image.src = src;
+}
+};
+axomicjs.Texture.prototype = Object.create(axomicjs.EventDispatcher.prototype);
+axomicjs.Texture.prototype.getPixel = function(u, v) {
+if(!this.loaded||!this.image) return {r:255,g:255,b:255};
+var x=Math.floor(u*(this.image.width-1));
+var y=Math.floor((1-v)*(this.image.height-1));
+var canvas=document.createElement('canvas');
+canvas.width=this.image.width; canvas.height=this.image.height;
+var ctx=canvas.getContext('2d');
+ctx.drawImage(this.image,0,0);
+var data=ctx.getImageData(x,y,1,1).data;
+return {r:data[0],g:data[1],b:data[2]};
+};
+
+axomicjs.Material = function(opts) {
+axomicjs.EventDispatcher.call(this);
+opts=opts||{};
+this.color=opts.color!==undefined?new axomicjs.Color(opts.color):new axomicjs.Color(0xffffff);
+this.roughness=opts.roughness||0.5;
+this.metalness=opts.metalness||0;
+this.map=opts.map||null;
+this.emissive=opts.emissive!==undefined?new axomicjs.Color(opts.emissive):new axomicjs.Color(0x000000);
+this.transparent=opts.transparent||false;
+this.opacity=opts.opacity!==undefined?opts.opacity:1;
+this.wireframe=opts.wireframe||false;
+this.side=opts.side||0;
+};
+axomicjs.Material.prototype = Object.create(axomicjs.EventDispatcher.prototype);
+axomicjs.MeshStandardMaterial = function(opts) { axomicjs.Material.call(this,opts); };
+axomicjs.MeshStandardMaterial.prototype = Object.create(axomicjs.Material.prototype);
+axomicjs.MeshBasicMaterial = function(opts) { axomicjs.Material.call(this,opts); this.roughness=1; };
+axomicjs.MeshBasicMaterial.prototype = Object.create(axomicjs.Material.prototype);
+axomicjs.MeshPhongMaterial = function(opts) { axomicjs.Material.call(this,opts); this.specular=opts.specular!==undefined?new axomicjs.Color(opts.specular):new axomicjs.Color(0x111111); this.shininess=opts.shininess||30; };
+axomicjs.MeshPhongMaterial.prototype = Object.create(axomicjs.Material.prototype);
+
+axomicjs.Light = function(color,intensity) { axomicjs.Object3D.call(this); this.color=new axomicjs.Color(color!==undefined?color:0xffffff); this.intensity=intensity!==undefined?intensity:1; };
+axomicjs.Light.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.AmbientLight = function(color,intensity) { axomicjs.Light.call(this,color,intensity); };
+axomicjs.AmbientLight.prototype = Object.create(axomicjs.Light.prototype);
+axomicjs.DirectionalLight = function(color,intensity) { axomicjs.Light.call(this,color,intensity); };
+axomicjs.DirectionalLight.prototype = Object.create(axomicjs.Light.prototype);
+axomicjs.PointLight = function(color,intensity,range) { axomicjs.Light.call(this,color,intensity); this.range=range||10; };
+axomicjs.PointLight.prototype = Object.create(axomicjs.Light.prototype);
+axomicjs.SpotLight = function(color,intensity,range,angle,penumbra) { axomicjs.Light.call(this,color,intensity); this.range=range||10; this.angle=angle||Math.PI/6; this.penumbra=penumbra||0; };
+axomicjs.SpotLight.prototype = Object.create(axomicjs.Light.prototype);
+
+axomicjs.Mesh = function(geometry,material) { axomicjs.Object3D.call(this); this.geometry=geometry; this.material=material; };
+axomicjs.Mesh.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.Group = function() { axomicjs.Object3D.call(this); };
+axomicjs.Group.prototype = Object.create(axomicjs.Object3D.prototype);
+
+axomicjs.Sprite = function(material) { axomicjs.Object3D.call(this); this.material=material; };
+axomicjs.Sprite.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.SpriteMaterial = function(opts) { axomicjs.Material.call(this,opts); this.map=opts.map||null; };
+
+axomicjs.ParticleSystem = function(maxParticles) {
+axomicjs.Object3D.call(this);
+this.particles = [];
+this.maxParticles = maxParticles||1000;
+this.particleGeometry = new axomicjs.Geometry();
+};
+axomicjs.ParticleSystem.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.ParticleSystem.prototype.emit = function(position, velocity, life, color, size) {
+if(this.particles.length>=this.maxParticles) return;
+this.particles.push({
+position: position.clone(),
+velocity: velocity.clone(),
+life: life||1,
+maxLife: life||1,
+color: color||new axomicjs.Color(1,1,1),
+size: size||1
+});
+};
+axomicjs.ParticleSystem.prototype.update = function(dt) {
+for(var i=this.particles.length-1;i>=0;i--) {
+var p=this.particles[i];
+p.life-=dt;
+if(p.life<=0) { this.particles.splice(i,1); continue; }
+p.position.add(new axomicjs.Vector3().copy(p.velocity).multiplyScalar(dt));
+}
+};
+
+axomicjs.AnimationClip = function(name,duration,tracks) { this.name=name; this.duration=duration; this.tracks=tracks||[]; };
+axomicjs.KeyframeTrack = function(name,times,values) { this.name=name; this.times=times; this.values=values; };
+axomicjs.AnimationMixer = function(root) { this.root=root; this.clips=[]; this._currentClip=null; this._currentTime=0; };
+axomicjs.AnimationMixer.prototype.play = function(clip) { this._currentClip=clip; this._currentTime=0; };
+axomicjs.AnimationMixer.prototype.update = function(dt) {
+if(!this._currentClip) return;
+this._currentTime+=dt;
+if(this._currentTime>this._currentClip.duration) this._currentTime=this._currentTime%this._currentClip.duration;
+var t=this._currentTime;
+for(var i=0;i<this._currentClip.tracks.length;i++) {
+var track=this._currentClip.tracks[i];
+var val=track.values[0];
+for(var j=1;j<track.times.length;j++) {
+if(t<track.times[j]) {
+var alpha=(t-track.times[j-1])/(track.times[j]-track.times[j-1]);
+val=axomicjs.Math.lerp(track.values[j-1],track.values[j],alpha);
+break;
+}
+val=track.values[track.values.length-1];
+}
+var parts=track.name.split('.');
+if(parts[0]==='position'&&this.root.position) this.root.position[parts[1]]=val;
+else if(parts[0]==='rotation'&&this.root.rotation) this.root.rotation[parts[1]]=val;
+}
+};
+
+axomicjs.AudioListener = function() { axomicjs.Object3D.call(this); };
+axomicjs.AudioListener.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.Audio = function(listener) { this.listener=listener; this.source=null; this.loaded=false; };
+axomicjs.Audio.prototype.load = function(src) { var that=this; this.source=new Audio(src); this.source.addEventListener('canplaythrough',function(){that.loaded=true;}); this.source.load(); };
+axomicjs.Audio.prototype.play = function() { if(this.source) this.source.play(); };
+axomicjs.Audio.prototype.pause = function() { if(this.source) this.source.pause(); };
+
+axomicjs.AxesHelper = function(size) { axomicjs.Object3D.call(this); size=size||1; };
+axomicjs.AxesHelper.prototype = Object.create(axomicjs.Object3D.prototype);
+axomicjs.GridHelper = function(size,div) { axomicjs.Object3D.call(this); size=size||10; div=div||10; };
+axomicjs.GridHelper.prototype = Object.create(axomicjs.Object3D.prototype);
+
+axomicjs.JSONLoader = function() {};
+axomicjs.JSONLoader.prototype.load = function(url,callback) {
+var xhr=new XMLHttpRequest();
+xhr.open('GET',url,true);
+xhr.onload=function(){ if(xhr.status===200){ var data=JSON.parse(xhr.responseText); callback(data); } };
+xhr.send();
+};
+axomicjs.TextureLoader = function() {};
+axomicjs.TextureLoader.prototype.load = function(src,callback) {
+var tex=new axomicjs.Texture(src);
+if(callback) tex.addEventListener('load',function(){callback(tex);});
+return tex;
+};
+
+axomicjs.Renderer = function(width,height,opts) {
+opts=opts||{};
+this.canvas=document.createElement('canvas');
+this.canvas.width=width||800;
+this.canvas.height=height||600;
+this.ctx=this.canvas.getContext('2d');
+this.bgColor=opts.bgColor||'#000000';
+this.shadowMapEnabled=opts.shadowMapEnabled||false;
+this.sortObjects=true;
+};
+axomicjs.Renderer.prototype.setSize = function(w,h) { this.canvas.width=w; this.canvas.height=h; };
+axomicjs.Renderer.prototype.clear = function() {
+this.ctx.fillStyle=this.bgColor||'#000000';
+this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+};
+axomicjs.Renderer.prototype.render = function(scene,camera) {
+var ctx=this.ctx, w=this.canvas.width, h=this.canvas.height;
+if(this.bgColor&&this.bgColor!=='transparent'){ctx.fillStyle=this.bgColor; ctx.fillRect(0,0,w,h);}
+else{ctx.clearRect(0,0,w,h);}
+var allFaces=[];
+(function collectFaces(obj,pm) {
+if(!obj.visible) return;
+if(obj.frustumCulled===false){}
+obj.updateMatrix();
+var wm=new axomicjs.Matrix4().identity();
+if(pm) wm.multiply(pm);
+wm.multiply(obj.matrix);
+if(obj instanceof axomicjs.Mesh && obj.geometry && obj.geometry.faces.length) {
+var geo=obj.geometry;
+var mat=obj.material;
+for(var fi=0;fi<geo.faces.length;fi++) {
+var face=geo.faces[fi];
+var v0=wm.transformPoint(geo.vertices[face[0]]);
+var v1=wm.transformPoint(geo.vertices[face[1]]);
+var v2=wm.transformPoint(geo.vertices[face[2]]);
+var v0v=camera.viewMatrix.transformPoint(v0);
+var v1v=camera.viewMatrix.transformPoint(v1);
+var v2v=camera.viewMatrix.transformPoint(v2);
+if(v0v.z<=0.05&&v1v.z<=0.05&&v2v.z<=0.05) continue;
+var p0=camera.projectionMatrix.transformPoint(v0v);
+var p1=camera.projectionMatrix.transformPoint(v1v);
+var p2=camera.projectionMatrix.transformPoint(v2v);
+var crossZ=(p1.x-p0.x)*(p2.y-p0.y)-(p1.y-p0.y)*(p2.x-p0.x);
+if(!mat.wireframe&&crossZ<=0) continue;
+var sx0=(p0.x+1)*w/2, sy0=(-p0.y+1)*h/2;
+var sx1=(p1.x+1)*w/2, sy1=(-p1.y+1)*h/2;
+var sx2=(p2.x+1)*w/2, sy2=(-p2.y+1)*h/2;
+var avgZ=(v0v.z+v1v.z+v2v.z)/3;
+var normal=geo.faceNormals[fi]||null;
+allFaces.push({
+sx0:sx0, sy0:sy0, sx1:sx1, sy1:sy1, sx2:sx2, sy2:sy2,
+avgZ:avgZ, material:mat, normal:normal,
+wv0:v0, wv1:v1, wv2:v2,
+uv0:geo.uvs[face[0]], uv1:geo.uvs[face[1]], uv2:geo.uvs[face[2]]
+});
+}
+}
+if(obj instanceof axomicjs.ParticleSystem) {
+for(var i=0;i<obj.particles.length;i++) {
+var p=obj.particles[i];
+var screenPos=camera.projectionMatrix.transformPoint(camera.viewMatrix.transformPoint(p.position));
+var sx=(screenPos.x+1)*w/2, sy=(-screenPos.y+1)*h/2;
+var lifeRatio=p.life/p.maxLife;
+var alpha=lifeRatio;
+ctx.fillStyle='rgba('+Math.floor(p.color.r*255)+','+Math.floor(p.color.g*255)+','+Math.floor(p.color.b*255)+','+alpha+')';
+ctx.beginPath();
+ctx.arc(sx,sy,p.size*2,0,Math.PI*2);
+ctx.fill();
+}
+}
+for(var i=0;i<obj.children.length;i++) collectFaces(obj.children[i], wm);
+})(scene, null);
+allFaces.sort(function(a,b){ return b.avgZ - a.avgZ; });
+var lights=[];
+(function gatherLights(o){
+if(o instanceof axomicjs.AmbientLight||o instanceof axomicjs.DirectionalLight||o instanceof axomicjs.PointLight) lights.push(o);
+for(var i=0;i<o.children.length;i++) gatherLights(o.children[i]);
+})(scene);
+for(var i=0;i<allFaces.length;i++) {
+var f=allFaces[i];
+var mat=f.material;
+var col=mat.color.clone();
+if(mat.map&&mat.map.loaded) {
+var u=(f.uv0?f.uv0.x:0.5), v=(f.uv0?f.uv0.y:0.5);
+var texel=mat.map.getPixel(u,v);
+col.setRGB(texel.r/255,texel.g/255,texel.b/255);
+}
+var lightFactor=0.15;
+if(f.normal) {
+var centroid=new axomicjs.Vector3((f.wv0.x+f.wv1.x+f.wv2.x)/3,(f.wv0.y+f.wv1.y+f.wv2.y)/3,(f.wv0.z+f.wv1.z+f.wv2.z)/3);
+var diff=0, spec=0;
+for(var li=0;li<lights.length;li++) {
+var light=lights[li];
+if(light instanceof axomicjs.AmbientLight) { diff+=light.intensity*0.2; continue; }
+var dir, intensity=light.intensity;
+if(light instanceof axomicjs.DirectionalLight) { dir=new axomicjs.Vector3().copy(light.position).normalize(); }
+else if(light instanceof axomicjs.PointLight) {
+dir=new axomicjs.Vector3().copy(light.position).sub(centroid);
+var dist=dir.length();
+if(dist>light.range) continue;
+dir.normalize();
+intensity*=Math.max(0,1-dist/light.range);
+}
+if(dir) {
+var dot=Math.max(0,f.normal.dot(dir));
+diff+=dot*intensity;
+if(mat instanceof axomicjs.MeshPhongMaterial) {
+var reflectDir=new axomicjs.Vector3().copy(dir).sub(new axomicjs.Vector3().copy(f.normal).multiplyScalar(2*dot));
+var viewDir=new axomicjs.Vector3().copy(camera.position).sub(centroid).normalize();
+var specDot=Math.max(0,reflectDir.dot(viewDir));
+spec+=Math.pow(specDot,mat.shininess)*intensity;
+}
+}
+}
+lightFactor=Math.max(0.08,Math.min(1,diff));
+if(mat instanceof axomicjs.MeshPhongMaterial) {
+col.r=Math.min(1,col.r*lightFactor+mat.specular.r*spec);
+col.g=Math.min(1,col.g*lightFactor+mat.specular.g*spec);
+col.b=Math.min(1,col.b*lightFactor+mat.specular.b*spec);
+}
+}
+if(mat instanceof axomicjs.MeshBasicMaterial) lightFactor=1;
+var rough=1-mat.roughness*0.5;
+lightFactor*=rough;
+col.r=Math.min(1,col.r*lightFactor+mat.emissive.r);
+col.g=Math.min(1,col.g*lightFactor+mat.emissive.g);
+col.b=Math.min(1,col.b*lightFactor+mat.emissive.b);
+var alpha=mat.transparent?mat.opacity:1;
+var cr=Math.floor(col.r*255), cg=Math.floor(col.g*255), cb=Math.floor(col.b*255);
+ctx.fillStyle='rgba('+cr+','+cg+','+cb+','+alpha+')';
+ctx.strokeStyle=mat.wireframe?'rgb('+cr+','+cg+','+cb+')':'rgba(0,0,0,0.15)';
+ctx.lineWidth=mat.wireframe?1:0.5;
+ctx.beginPath(); ctx.moveTo(f.sx0,f.sy0); ctx.lineTo(f.sx1,f.sy1); ctx.lineTo(f.sx2,f.sy2); ctx.closePath();
+ctx.fill();
+if(!mat.wireframe||mat.wireframe) ctx.stroke();
+if(mat.wireframe) { ctx.fillStyle='rgba(0,0,0,0)'; ctx.fill(); }
+}
+};
+
+axomicjs.Utils = {};
+axomicjs.Utils.arrayMax = function(arr) { return Math.max.apply(null,arr); };
+axomicjs.Utils.arrayMin = function(arr) { return Math.min.apply(null,arr); };
+axomicjs.Utils.generateUUID = function() { return 'xxxx-xxxx-xxxx-xxxx'.replace(/x/g,function(){return Math.floor(Math.random()*16).toString(16);}); };
+
+axomicjs.WebGPU = {};
+axomicjs.WebGPU.isAvailable = function() { return typeof navigator !== 'undefined' && !!navigator.gpu; };
+
+global.axomicjs = axomicjs;
+})(window);
